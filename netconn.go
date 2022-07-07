@@ -151,7 +151,7 @@ func (c *netConn) SetWriteDeadline(t time.Time) error {
 	if t.IsZero() {
 		c.writeTimer.Stop()
 	} else {
-		c.writeTimer.Reset(t.Sub(time.Now()))
+		c.writeTimer.Reset(time.Until(t))
 	}
 	return nil
 }
@@ -160,7 +160,7 @@ func (c *netConn) SetReadDeadline(t time.Time) error {
 	if t.IsZero() {
 		c.readTimer.Stop()
 	} else {
-		c.readTimer.Reset(t.Sub(time.Now()))
+		c.readTimer.Reset(time.Until(t))
 	}
 	return nil
 }

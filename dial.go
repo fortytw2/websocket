@@ -71,7 +71,6 @@ func dial(ctx context.Context, urls string, opts *DialOptions, rand io.Reader) (
 		opts = &DialOptions{}
 	}
 
-	opts = &*opts
 	if opts.HTTPClient == nil {
 		opts.HTTPClient = http.DefaultClient
 	} else if opts.HTTPClient.Timeout > 0 {
@@ -243,8 +242,6 @@ func verifyServerExtensions(copts *compressionOptions, h http.Header) (*compress
 	if ext.name != "permessage-deflate" || len(exts) > 1 || copts == nil {
 		return nil, fmt.Errorf("WebSocket protcol violation: unsupported extensions from server: %+v", exts[1:])
 	}
-
-	copts = &*copts
 
 	for _, p := range ext.params {
 		switch p {

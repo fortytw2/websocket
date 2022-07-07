@@ -51,7 +51,7 @@ func TestHeader(t *testing.T) {
 
 		r := rand.New(rand.NewSource(time.Now().UnixNano()))
 		randBool := func() bool {
-			return r.Intn(1) == 0
+			return rand.Int()%2 == 0
 		}
 
 		for i := 0; i < 10000; i++ {
@@ -86,7 +86,21 @@ func testHeader(t *testing.T, h header) {
 	h2, err := readFrameHeader(r, make([]byte, 8))
 	assert.Success(t, err)
 
-	assert.Equal(t, "read header", h, h2)
+	assert.Equal(t, "header fin", h.fin, h2.fin)
+	assert.Equal(t, "header rsv1", h.rsv1, h2.rsv1)
+	assert.Equal(t, "header rsv2", h.rsv2, h2.rsv2)
+	assert.Equal(t, "header rsv3", h.rsv3, h2.rsv3)
+	assert.Equal(t, "header opcode", h.opcode, h2.opcode)
+
+	// if masked we need the mask key otherwise ignorei t
+	if h.masked {
+		assert.Equal(t, "header masked", h.masked, h2.masked)
+		assert.Equal(t, "header maskKey", h.maskKey, h2.maskKey)
+	} else {
+		assert.Equal(t, "header masked", h.masked, h2.masked)
+	}
+
+	assert.Equal(t, "read header", h.payloadLength, h2.payloadLength)
 }
 
 func Test_mask(t *testing.T) {
