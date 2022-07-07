@@ -16,6 +16,7 @@ import (
 	"github.com/klauspost/compress/flate"
 
 	"github.com/fortytw2/websocket/internal/errd"
+	"github.com/fortytw2/websocket/internal/wsmask"
 )
 
 // Writer returns a writer bounded by the context that will write
@@ -359,7 +360,7 @@ func (c *Conn) writeFramePayload(p []byte) (n int, err error) {
 			return n, err
 		}
 
-		maskKey = mask(maskKey, c.writeBuf[i:c.bw.Buffered()])
+		maskKey = wsmask.Mask(maskKey, c.writeBuf[i:c.bw.Buffered()])
 
 		p = p[j:]
 		n += j

@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/fortytw2/websocket/internal/errd"
+	"github.com/fortytw2/websocket/internal/wsmask"
 	"github.com/fortytw2/websocket/internal/xsync"
 )
 
@@ -261,7 +262,7 @@ func (c *Conn) handleControl(ctx context.Context, h header) (err error) {
 	}
 
 	if h.masked {
-		mask(h.maskKey, b)
+		wsmask.Mask(h.maskKey, b)
 	}
 
 	switch h.opcode {
@@ -425,7 +426,7 @@ func (mr *msgReader) read(p []byte) (int, error) {
 		mr.payloadLength -= int64(n)
 
 		if !mr.c.client {
-			mr.maskKey = mask(mr.maskKey, p)
+			mr.maskKey = wsmask.Mask(mr.maskKey, p)
 		}
 
 		return n, nil
