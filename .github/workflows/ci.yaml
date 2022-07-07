@@ -29,11 +29,3 @@ jobs:
         uses: ./ci/container
         with:
           args: ./ci/test.sh
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: 9b3ee4dc-8297-4774-b4b9-a61561fbbce7
-      - name: Upload coverage.html
-        uses: actions/upload-artifact@v2
-        with:
-          name: coverage.html
-          path: ./ci/out/coverage.html
