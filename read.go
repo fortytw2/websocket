@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/fortytw2/websocket/internal/errd"
+	"github.com/fortytw2/websocket/internal/wsmask"
 	"github.com/fortytw2/websocket/internal/xsync"
 )
 
@@ -70,10 +71,16 @@ func (c *Conn) CloseRead(ctx context.Context) context.Context {
 // By default, the connection has a message read limit of 32768 bytes.
 //
 // When the limit is hit, the connection will be closed with StatusMessageTooBig.
+//
+// Set to -1 to disable.
 func (c *Conn) SetReadLimit(n int64) {
-	// We add read one more byte than the limit in case
-	// there is a fin frame that needs to be read.
-	c.msgReader.limitReader.limit.Store(n + 1)
+	if n >= 0 {
+		// We read one more byte than the limit in case
+		// there is a fin frame that needs to be read.
+		n++
+	}
+
+	c.msgReader.limitReader.limit.Store(n)
 }
 
 const defaultReadLimit = 32768
@@ -261,7 +268,7 @@ func (c *Conn) handleControl(ctx context.Context, h header) (err error) {
 	}
 
 	if h.masked {
-		mask(h.maskKey, b)
+		wsmask.Mask(h.maskKey, b)
 	}
 
 	switch h.opcode {
@@ -425,7 +432,7 @@ func (mr *msgReader) read(p []byte) (int, error) {
 		mr.payloadLength -= int64(n)
 
 		if !mr.c.client {
-			mr.maskKey = mask(mr.maskKey, p)
+			mr.maskKey = wsmask.Mask(mr.maskKey, p)
 		}
 
 		return n, nil
@@ -454,7 +461,11 @@ func (lr *limitReader) reset(r io.Reader) {
 }
 
 func (lr *limitReader) Read(p []byte) (int, error) {
-	if lr.n <= 0 {
+	if lr.n < 0 {
+		return lr.r.Read(p)
+	}
+
+	if lr.n == 0 {
 		err := fmt.Errorf("read limited at %v bytes", lr.limit.Load())
 		lr.c.writeError(StatusMessageTooBig, err)
 		return 0, err
@@ -465,6 +476,9 @@ func (lr *limitReader) Read(p []byte) (int, error) {
 	}
 	n, err := lr.r.Read(p)
 	lr.n -= int64(n)
+	if lr.n < 0 {
+		lr.n = 0
+	}
 	return n, err
 }
 

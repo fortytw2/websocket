@@ -28,6 +28,9 @@ jobs:
 
       - name: install golint
         run: go install golang.org/x/lint/golint@latest
+      
+      - name: install goasmfmt
+        run: go install github.com/klauspost/asmfmt/cmd/asmfmt@latest
 
       - run: goimports -local github.com/fortytw2/websocket -w .
       - run: golint -set_exit_status ./...

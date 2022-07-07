@@ -8,14 +8,15 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"io"
+	"net"
 	"time"
 
 	"github.com/klauspost/compress/flate"
 
 	"github.com/fortytw2/websocket/internal/errd"
+	"github.com/fortytw2/websocket/internal/wsmask"
 )
 
 // Writer returns a writer bounded by the context that will write
@@ -54,14 +55,14 @@ type msgWriter struct {
 
 func (mw *msgWriter) Write(p []byte) (int, error) {
 	if mw.closed {
-		return 0, errors.New("cannot use closed writer")
+		return 0, net.ErrClosed
 	}
 	return mw.mw.Write(p)
 }
 
 func (mw *msgWriter) Close() error {
 	if mw.closed {
-		return errors.New("cannot use closed writer")
+		return net.ErrClosed
 	}
 	mw.closed = true
 	return mw.mw.Close()
@@ -247,7 +248,6 @@ func (c *Conn) writeFrame(ctx context.Context, fin bool, flate bool, opcode opco
 	if err != nil {
 		return 0, err
 	}
-	defer c.writeFrameMu.unlock()
 
 	// If the state says a close has already been written, we wait until
 	// the connection is closed and return that error.
@@ -258,6 +258,7 @@ func (c *Conn) writeFrame(ctx context.Context, fin bool, flate bool, opcode opco
 	wroteClose := c.wroteClose
 	c.closeMu.Unlock()
 	if wroteClose && opcode != opClose {
+		c.writeFrameMu.unlock()
 		select {
 		case <-ctx.Done():
 			return 0, ctx.Err()
@@ -265,6 +266,7 @@ func (c *Conn) writeFrame(ctx context.Context, fin bool, flate bool, opcode opco
 			return 0, c.closeErr
 		}
 	}
+	defer c.writeFrameMu.unlock()
 
 	select {
 	case <-c.closed:
@@ -359,7 +361,7 @@ func (c *Conn) writeFramePayload(p []byte) (n int, err error) {
 			return n, err
 		}
 
-		maskKey = mask(maskKey, c.writeBuf[i:c.bw.Buffered()])
+		maskKey = wsmask.Mask(maskKey, c.writeBuf[i:c.bw.Buffered()])
 
 		p = p[j:]
 		n += j

@@ -37,7 +37,11 @@ import (
 //
 // A received StatusNormalClosure or StatusGoingAway close frame will be translated to
 // io.EOF when reading.
+//
+// Furthermore, the ReadLimit is set to -1 to disable it.
 func NetConn(ctx context.Context, c *Conn, msgType MessageType) net.Conn {
+	c.SetReadLimit(-1)
+
 	nc := &netConn{
 		c:       c,
 		msgType: msgType,
@@ -77,6 +81,8 @@ type netConn struct {
 var _ net.Conn = &netConn{}
 
 func (c *netConn) Close() error {
+	c.writeTimer.Stop()
+	c.readTimer.Stop()
 	return c.c.Close(StatusNormalClosure, "")
 }
 
