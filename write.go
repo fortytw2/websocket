@@ -248,7 +248,6 @@ func (c *Conn) writeFrame(ctx context.Context, fin bool, flate bool, opcode opco
 	if err != nil {
 		return 0, err
 	}
-	defer c.writeFrameMu.unlock()
 
 	// If the state says a close has already been written, we wait until
 	// the connection is closed and return that error.
@@ -259,6 +258,7 @@ func (c *Conn) writeFrame(ctx context.Context, fin bool, flate bool, opcode opco
 	wroteClose := c.wroteClose
 	c.closeMu.Unlock()
 	if wroteClose && opcode != opClose {
+		c.writeFrameMu.unlock()
 		select {
 		case <-ctx.Done():
 			return 0, ctx.Err()
@@ -266,6 +266,7 @@ func (c *Conn) writeFrame(ctx context.Context, fin bool, flate bool, opcode opco
 			return 0, c.closeErr
 		}
 	}
+	defer c.writeFrameMu.unlock()
 
 	select {
 	case <-c.closed:
