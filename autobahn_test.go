@@ -111,7 +111,7 @@ func wstestClientServer(ctx context.Context) (url string, closeFn func(), err er
 		return "", nil, fmt.Errorf("failed to write spec: %w", err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*15)
+	ctx, cancel := context.WithTimeout(ctx, time.Minute*15)
 	defer func() {
 		if err != nil {
 			cancel()
