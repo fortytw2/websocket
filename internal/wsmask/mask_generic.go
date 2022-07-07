@@ -7,14 +7,13 @@ import (
 	"math/bits"
 )
 
+// Mask applies the WebSocket masking algorithm to b
+// with the given key.
+// See https://tools.ietf.org/html/rfc6455#section-5.3
 func Mask(key uint32, b []byte) uint32 {
 	return maskGo(key, b)
 }
 
-// maskGo applies the WebSocket masking algorithm to p
-// with the given key.
-// See https://tools.ietf.org/html/rfc6455#section-5.3
-//
 // The returned value is the correctly rotated key to
 // to continue to mask/unmask the message.
 //

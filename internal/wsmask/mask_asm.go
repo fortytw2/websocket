@@ -4,6 +4,9 @@ package wsmask
 
 import "golang.org/x/sys/cpu"
 
+// Mask applies the WebSocket masking algorithm to b
+// with the given key.
+// See https://tools.ietf.org/html/rfc6455#section-5.3
 func Mask(key uint32, b []byte) uint32 {
 	if len(b) > 0 {
 		return maskAsm(&b[0], len(b), key)
