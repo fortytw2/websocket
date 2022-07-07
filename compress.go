@@ -178,9 +178,9 @@ func (sw *slidingWindow) init(n int) {
 	}
 
 	p := slidingWindowPool(n)
-	buf, ok := p.Get().([]byte)
+	pbuf, ok := p.Get().(*[]byte)
 	if ok {
-		sw.buf = buf[:0]
+		sw.buf = (*pbuf)[:0]
 	} else {
 		sw.buf = make([]byte, 0, n)
 	}
@@ -192,7 +192,7 @@ func (sw *slidingWindow) close() {
 	}
 
 	swPoolMu.Lock()
-	swPool[cap(sw.buf)].Put(sw.buf)
+	swPool[cap(sw.buf)].Put(&sw.buf)
 	swPoolMu.Unlock()
 	sw.buf = nil
 }
