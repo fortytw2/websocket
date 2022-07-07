@@ -8,9 +8,9 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"io"
+	"net"
 	"time"
 
 	"github.com/klauspost/compress/flate"
@@ -55,14 +55,14 @@ type msgWriter struct {
 
 func (mw *msgWriter) Write(p []byte) (int, error) {
 	if mw.closed {
-		return 0, errors.New("cannot use closed writer")
+		return 0, net.ErrClosed
 	}
 	return mw.mw.Write(p)
 }
 
 func (mw *msgWriter) Close() error {
 	if mw.closed {
-		return errors.New("cannot use closed writer")
+		return net.ErrClosed
 	}
 	mw.closed = true
 	return mw.mw.Close()
