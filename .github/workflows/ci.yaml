@@ -14,7 +14,7 @@ jobs:
         with:
           fetch-depth: 1
 
-      - uses: WillAbides/setup-go-faster@v1.7.0
+      - uses: WillAbides/setup-go-faster@v1.8.0
         with:
           go-version: "1.18.x"
 
@@ -44,7 +44,7 @@ jobs:
         with:
           fetch-depth: 1
 
-      - uses: WillAbides/setup-go-faster@v1.7.0
+      - uses: WillAbides/setup-go-faster@v1.8.0
         with:
           go-version: "1.18.x"
 
